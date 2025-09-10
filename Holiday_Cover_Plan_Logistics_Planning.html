@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holiday Cover Plan -- Polite Delegation in Logistics Planning</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.header { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px; text-align: center; }
+.header h1 { color: #4a5568; margin-bottom: 10px; font-size: 2.5em; }
+.header p { color: #718096; font-size: 1.2em; }
+.navigation { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; padding: 15px 25px; border-radius: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000; display: flex; gap: 15px; }
+.nav-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-size: 1em; transition: all 0.3s ease; }
+.nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.nav-btn:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+.phase-indicator { color: #667eea; font-weight: bold; margin: 0 15px; line-height: 40px; }
+.phase { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); margin-bottom: 100px; display: none; }
+.phase.active { display: block; }
+.phase h2 { color: #2d3748; margin-bottom: 20px; font-size: 2em; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+.scenario-box { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border-left: 5px solid #f6ad55; }
+.scenario-box h3 { color: #744210; margin-bottom: 15px; }
+.task-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+.tasks-section { background: #f7fafc; padding: 25px; border-radius: 12px; border: 2px dashed #cbd5e0; }
+.tasks-section h3 { color: #2d3748; margin-bottom: 20px; text-align: center; }
+.task-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: move; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease; user-select: none; }
+.task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.task-card.dragging { opacity: 0.5; transform: rotate(5deg); }
+.task-id { font-weight: bold; color: #ffd89b; margin-right: 10px; }
+.team-section { background: #f7fafc; padding: 25px; border-radius: 12px; }
+.team-section h3 { color: #2d3748; margin-bottom: 20px; text-align: center; }
+.team-member { background: white; padding: 20px; margin: 15px 0; border-radius: 12px; border: 2px solid #e2e8f0; min-height: 120px; transition: all 0.3s ease; }
+.team-member:hover { border-color: #667eea; box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1); }
+.team-member.drag-over { border-color: #48bb78; background: #f0fff4; transform: scale(1.02); }
+.member-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+.member-name { font-weight: bold; color: #2d3748; font-size: 1.1em; }
+.member-role { color: #718096; font-style: italic; }
+.member-skills { margin: 10px 0; }
+.skill { display: inline-block; background: #e6fffa; color: #234e52; padding: 5px 10px; margin: 3px; border-radius: 15px; font-size: 0.9em; }
+.watch-out { background: #fed7d7; color: #742a2a; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; margin-top: 10px; }
+.assigned-tasks { margin-top: 15px; min-height: 50px; border: 2px dashed #cbd5e0; border-radius: 8px; padding: 10px; background: #f8f9fa; }
+.assigned-task { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 8px 12px; margin: 5px 0; border-radius: 6px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
+.remove-task { background: rgba(255,255,255,0.3); border: none; color: white; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; }
+.phrase-bank { background: #f7fafc; padding: 25px; border-radius: 12px; margin: 20px 0; }
+.phrase-bank h4 { color: #2d3748; margin-bottom: 15px; text-align: center; }
+.phrase { background: #edf2f7; padding: 10px; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; border-left: 4px solid #667eea; }
+.phrase:hover { background: #e2e8f0; transform: translateX(5px); }
+.phrase.starred { background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); color: white; }
+.controls { text-align: center; margin: 30px 0; }
+.btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border: none; border-radius: 25px; font-size: 1.1em; cursor: pointer; margin: 0 10px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.btn:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+.btn.secondary { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+.progress-bar { background: #e2e8f0; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; transition: width 0.5s ease; border-radius: 4px; }
+.reflection-questions { background: #f0fff4; padding: 25px; border-radius: 12px; border-left: 5px solid #48bb78; margin: 20px 0; }
+.reflection-questions h4 { color: #22543d; margin-bottom: 15px; }
+.question { margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border: 1px solid #c6f6d5; }
+.question label { color: #2f855a; font-weight: 600; display: block; margin-bottom: 8px; }
+.question textarea { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-family: inherit; resize: vertical; min-height: 80px; }
+.question textarea:focus { outline: none; border-color: #667eea; }
+.summary-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0; }
+.summary-table table { width: 100%; border-collapse: collapse; }
+.summary-table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; text-align: left; }
+.summary-table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; }
+.takeaway-input { background: #fffaf0; padding: 25px; border-radius: 12px; border-left: 5px solid #f6ad55; margin: 20px 0; }
+.takeaway-input h4 { color: #744210; margin-bottom: 15px; }
+.takeaway-input input { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1.1em; font-family: inherit; }
+.takeaway-input input:focus { outline: none; border-color: #f6ad55; }
+.goals-wall { background: #f7fafc; padding: 25px; border-radius: 12px; margin: 20px 0; min-height: 100px; }
+.goal-item { background: linear-gradient(135deg, #ffd89b 0%, #f6ad55 100%); color: #744210; padding: 10px 15px; margin: 8px; border-radius: 20px; display: inline-block; font-weight: 600; }
+.hidden { display: none !important; }
+@media (max-width: 768px) {
+  .task-container { grid-template-columns: 1fr; }
+  .navigation { position: relative; bottom: auto; left: auto; transform: none; margin: 20px 0; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Holiday Cover Plan</h1>
+    <p>Polite Delegation in Logistics Planning • • Self-Paced</p>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 16.67%"></div>
+    </div>
+  </div>
+
+  <!-- Phase 1: Warm-Up -->
+  <div class="phase active" id="phase1">
+    <h2>🚀 Warm-Up</h2>
+    <div class="scenario-box">
+      <h3>Quick Poll</h3>
+      <p><strong>Have you had to cover urgent logistics or planning tasks (e.g., expediting, rescheduling, or MRP fixes) when a colleague was out?</strong></p>
+      <div class="controls">
+        <button class="btn" onclick="answer('yes')">✅ Yes, regularly</button>
+        <button class="btn" onclick="answer('no')">❌ Rarely/Never</button>
+      </div>
+      <div id="pollResult" class="hidden" style="margin-top: 20px; padding: 15px; background: #e6fffa; border-radius: 8px;">
+        <p><strong>Great!</strong> Today we'll practice how to delegate logistics planning tasks politely and effectively when colleagues are unexpectedly absent.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2: Main Activity -->
+  <div class="phase" id="phase2">
+    <h2>🎯 Logistics Task Delegation Challenge</h2>
+    <div class="scenario-box">
+      <h3>The Scenario</h3>
+      <p><strong>Sam</strong>, the senior logistics coordinator, is unexpectedly out during a peak week. Five critical planning tasks must be reassigned today to protect service and production. Study the tasks and team member profiles, then drag each task to the most suitable person.</p>
+    </div>
+
+    <div class="task-container">
+      <div class="tasks-section">
+        <h3>📋 Urgent Planning Tasks</h3>
+        <div id="taskList">
+          <div class="task-card" draggable="true" data-task="T1">
+            <span class="task-id">T1</span>
+            <span>Expedite critical supplier shipment (semiconductors) from Malaysia; align pickup, flights, and broker (time zone challenge)</span>
+          </div>
+          <div class="task-card" draggable="true" data-task="T2">
+            <span class="task-id">T2</span>
+            <span>Re-plan customer deliveries after unexpected line downtime; communicate revised ETAs to top 5 customers</span>
+          </div>
+          <div class="task-card" draggable="true" data-task="T3">
+            <span class="task-id">T3</span>
+            <span>Resolve 120+ overdue supplier ASNs blocking inbound and warehouse slots; coordinate with 3PL</span>
+          </div>
+          <div class="task-card" draggable="true" data-task="T4">
+            <span class="task-id">T4</span>
+            <span>Update ERP master data (new BOM & routing) for ECO effective tomorrow; validate MRP results</span>
+          </div>
+          <div class="task-card" draggable="true" data-task="T5">
+            <span class="task-id">T5</span>
+            <span>Handle escalated VIP shipment stuck at customs; propose workaround and prepare exec update</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="team-section">
+        <h3>👥 Logistics Planning Team Members</h3>
+
+        <div class="team-member" data-member="P1">
+          <div class="member-header">
+            <div>
+              <div class="member-name">Elena Petrova</div>
+              <div class="member-role">Material Planner (Supplier-facing)</div>
+            </div>
+          </div>
+          <div class="member-skills">
+            <span class="skill">Supplier expediting & escalation</span>
+            <span class="skill">Incoterms, freight booking, brokers</span>
+            <span class="skill">Fluent EN/DE/RU; strong negotiation</span>
+          </div>
+          <div class="watch-out">⚠️ Limited experience with direct customer communication</div>
+          <div class="assigned-tasks" data-member="P1"></div>
+        </div>
+
+        <div class="team-member" data-member="P2">
+          <div class="member-header">
+            <div>
+              <div class="member-name">James Okoro</div>
+              <div class="member-role">Customer Planner (Order Fulfilment)</div>
+            </div>
+          </div>
+          <div class="member-skills">
+            <span class="skill">Customer comms (ATP/CTP, ETAs)</span>
+            <span class="skill">Prioritisation & promise-date resets</span>
+            <span class="skill">Calm under pressure; persuasive</span>
+          </div>
+          <div class="watch-out">⚠️ Prefers email; less comfortable calling suppliers late-night</div>
+          <div class="assigned-tasks" data-member="P2"></div>
+        </div>
+
+        <div class="team-member" data-member="P3">
+          <div class="member-header">
+            <div>
+              <div class="member-name">Aiko Tanaka</div>
+              <div class="member-role">Production Planner / Systems</div>
+            </div>
+          </div>
+          <div class="member-skills">
+            <span class="skill">MRP & what‑if simulation</span>
+            <span class="skill">ERP (SAP/Oracle), BOMs & routings</span>
+            <span class="skill">Excellent documentation & validation</span>
+          </div>
+          <div class="watch-out">⚠️ Busy with S&OP prep this week</div>
+          <div class="assigned-tasks" data-member="P3"></div>
+        </div>
+
+        <div class="team-member" data-member="P4">
+          <div class="member-header">
+            <div>
+              <div class="member-name">Lucas Meyer</div>
+              <div class="member-role">Logistics Coordinator (Escalations)</div>
+            </div>
+          </div>
+          <div class="member-skills">
+            <span class="skill">Cross‑functional crisis management</span>
+            <span class="skill">3PL/carrier & customs brokerage</span>
+            <span class="skill">Exec updates; risk & workaround design</span>
+          </div>
+          <div class="watch-out">⚠️ Heavy ops load managing daily exceptions</div>
+          <div class="assigned-tasks" data-member="P4"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="submitPlan" onclick="submitPlan()" disabled>📋 Submit My Plan</button>
+    </div>
+  </div>
+
+  <!-- Phase 3: Plan Review -->
+  <div class="phase" id="phase3">
+    <h2>📊 Plan Review</h2>
+    <div class="summary-table" id="summaryTable">
+      <!-- Will be populated with JavaScript -->
+    </div>
+  </div>
+
+  <!-- Phase 4: Language Spotlight -->
+  <div class="phase" id="phase4">
+    <h2>💡 Language Spotlight</h2>
+    <p>Useful phrases for polite delegation in logistics planning. Click the ⭐ to save phrases you want to remember:</p>
+
+    <div class="phrase-bank">
+      <h4>📝 Phrase Bank</h4>
+
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>Could you take ownership of <strong>[shipment/task]</strong> given your experience with <strong>[suppliers/customers]</strong>?</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>Would you be comfortable handling <strong>[expedite/ETA update/ASN cleanup]</strong>? Your <strong>[skill]</strong> would make this smoother.</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>I was hoping you could manage <strong>[task]</strong> — your background with <strong>[ERP/3PL/customs]</strong> is a great fit.</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>This would allow me to focus on <strong>[critical production risk]</strong> while you handle <strong>[task]</strong>.</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>Thanks for stepping in — your experience with <strong>[MRP/ATP/Incoterms]</strong> will help us keep service levels.</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>Given today’s cut‑offs, could you prioritise <strong>[task]</strong> before <strong>[time]</strong>?</span>
+        <span style="float: right;">⭐</span>
+      </div>
+      <div class="phrase" onclick="toggleStar(this)">
+        <span>I realise this adds to your load, but your <strong>[skill]</strong> makes you the best person for this.</span>
+        <span style="float: right;">⭐</span>
+      </div>
+
+      <h4 style="margin-top: 20px;">⭐ My Saved Phrases</h4>
+      <div id="savedPhrases" style="min-height: 50px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+        <em>Click stars above to save phrases here</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5: Reflection -->
+  <div class="phase" id="phase5">
+    <h2>🤔 Share & Reflect</h2>
+    <div class="reflection-questions">
+      <h4>Reflection Questions</h4>
+      <div class="question">
+        <label>1. Why is your task allocation effective for protecting customer service and production?</label>
+        <textarea placeholder="Consider each team member's logistics expertise, cut‑offs, and current workload..."></textarea>
+      </div>
+      <div class="question">
+        <label>2. Which delegation phrase felt most natural in supplier/customer conversations? Which was hardest?</label>
+        <textarea placeholder="Think about the phrases you starred and how they apply to expediting, ETAs, and escalations..."></textarea>
+      </div>
+      <div class="question">
+        <label>3. How does this relate to your current challenges (MRP exceptions, carrier delays, customs holds)?</label>
+        <textarea placeholder="Connect this to your experience — service risk, inventory exposure, stakeholder management..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 6: Personal Takeaway -->
+  <div class="phase" id="phase6">
+    <h2>🎯 Personal Takeaway</h2>
+    <div class="takeaway-input">
+      <h4>Your Learning Goal</h4>
+      <p>Complete this sentence:</p>
+      <input type="text" id="takeawayInput" placeholder="In the next month, I will improve my _____________ when delegating logistics planning tasks in English.">
+      <div class="controls" style="margin-top: 20px;">
+        <button class="btn" onclick="addGoal()">Add to Goals Wall</button>
+      </div>
+    </div>
+
+    <div class="goals-wall">
+      <h4>🎯 Class Goals Wall</h4>
+      <div id="goalsContainer">
+        <em>Goals will appear here as classmates share them...</em>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn secondary" onclick="completeLesson()">🎉 Complete Lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Controls -->
+<div class="navigation">
+  <button class="nav-btn" id="backBtn" onclick="previousPhase()">⬅️ Back</button>
+  <span class="phase-indicator" id="phaseIndicator">Phase 1 of 6</span>
+  <button class="nav-btn" id="nextBtn" onclick="nextPhase()">Next ➡️</button>
+</div>
+
+<script>
+let currentPhase = 1;
+let totalPhases = 6;
+let assignments = {};
+let savedPhrases = [];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateProgress();
+    updateNavigation();
+    setupDragAndDrop();
+});
+
+function updateProgress() {
+    const progress = (currentPhase / totalPhases) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+}
+
+function updateNavigation() {
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const phaseIndicator = document.getElementById('phaseIndicator');
+    phaseIndicator.textContent = `Phase ${currentPhase} of ${totalPhases}`;
+    backBtn.disabled = currentPhase === 1;
+
+    if (currentPhase === 2) {
+        const allTasks = ['T1', 'T2', 'T3', 'T4', 'T5'];
+        const assignedTasks = Object.values(assignments).flat();
+        const allAssigned = allTasks.every(task => assignedTasks.includes(task));
+        nextBtn.disabled = !allAssigned || !document.getElementById('summaryTable').innerHTML;
+    } else {
+        nextBtn.disabled = currentPhase === totalPhases;
+    }
+}
+
+function nextPhase() {
+    if (currentPhase < totalPhases) {
+        document.getElementById(`phase${currentPhase}`).classList.remove('active');
+        currentPhase++;
+        document.getElementById(`phase${currentPhase}`).classList.add('active');
+        updateProgress();
+        updateNavigation();
+    }
+}
+
+function previousPhase() {
+    if (currentPhase > 1) {
+        document.getElementById(`phase${currentPhase}`).classList.remove('active');
+        currentPhase--;
+        document.getElementById(`phase${currentPhase}`).classList.add('active');
+        updateProgress();
+        updateNavigation();
+    }
+}
+
+function answer(response) {
+    document.getElementById('pollResult').classList.remove('hidden');
+}
+
+function toggleStar(element) {
+    const phraseText = element.querySelector('span').textContent;
+    element.classList.toggle('starred');
+    if (element.classList.contains('starred')) {
+        if (!savedPhrases.includes(phraseText)) {
+            savedPhrases.push(phraseText);
+        }
+    } else {
+        savedPhrases = savedPhrases.filter(p => p !== phraseText);
+    }
+    updateSavedPhrases();
+}
+
+function updateSavedPhrases() {
+    const container = document.getElementById('savedPhrases');
+    if (savedPhrases.length === 0) {
+        container.innerHTML = '<em>Click stars above to save phrases here</em>';
+    } else {
+        container.innerHTML = savedPhrases.map(phrase =>
+            `<div style="background: #e6fffa; padding: 8px; margin: 5px 0; border-radius: 6px; border-left: 3px solid #38b2ac;">${phrase}</div>`
+        ).join('');
+    }
+}
+
+function setupDragAndDrop() {
+    const taskCards = document.querySelectorAll('.task-card');
+    const teamMembers = document.querySelectorAll('.team-member');
+    taskCards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+    teamMembers.forEach(member => {
+        member.addEventListener('dragover', handleDragOver);
+        member.addEventListener('drop', handleDrop);
+        member.addEventListener('dragenter', handleDragEnter);
+        member.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    e.dataTransfer.setData('text/plain', e.target.dataset.task);
+    e.target.classList.add('dragging');
+}
+
+function handleDragEnd(e) { e.target.classList.remove('dragging'); }
+function handleDragOver(e) { e.preventDefault(); }
+function handleDragEnter(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const taskId = e.dataTransfer.getData('text/plain');
+    const memberId = e.currentTarget.dataset.member;
+
+    // Remove task from previous assignment
+    Object.keys(assignments).forEach(key => {
+        assignments[key] = (assignments[key] || []).filter(task => task !== taskId);
+    });
+
+    // Add task to new member
+    if (!assignments[memberId]) { assignments[memberId] = []; }
+    assignments[memberId].push(taskId);
+
+    updateAssignmentDisplay();
+    checkSubmitButton();
+}
+
+function updateAssignmentDisplay() {
+    const taskDescriptions = {
+        'T1': 'T1: Expedite critical supplier shipment (Malaysia)',
+        'T2': 'T2: Re-plan deliveries & share ETAs',
+        'T3': 'T3: Clear overdue ASNs & align 3PL slots',
+        'T4': 'T4: Update ERP master data & validate MRP',
+        'T5': 'T5: Manage VIP customs hold & exec update'
+    };
+
+    document.querySelectorAll('.assigned-tasks').forEach(container => { container.innerHTML = ''; });
+
+    Object.keys(assignments).forEach(memberId => {
+        const container = document.querySelector(`[data-member="${memberId}"] .assigned-tasks`);
+        (assignments[memberId] || []).forEach(taskId => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'assigned-task';
+            taskDiv.innerHTML = `
+                <span>${taskDescriptions[taskId]}</span>
+                <button class="remove-task" onclick="removeTask('${taskId}', '${memberId}')">×</button>
+            `;
+            container.appendChild(taskDiv);
+        });
+    });
+}
+
+function removeTask(taskId, memberId) {
+    assignments[memberId] = (assignments[memberId] || []).filter(task => task !== taskId);
+    updateAssignmentDisplay();
+    checkSubmitButton();
+}
+
+function checkSubmitButton() {
+    const allTasks = ['T1', 'T2', 'T3', 'T4', 'T5'];
+    const assignedTasks = Object.values(assignments).flat();
+    const allAssigned = allTasks.every(task => assignedTasks.includes(task));
+    document.getElementById('submitPlan').disabled = !allAssigned;
+}
+
+function submitPlan() {
+    const tableHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Team Member</th>
+                    <th>Assigned Tasks</th>
+                    <th>Task Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${generateSummaryRows()}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('summaryTable').innerHTML = tableHTML;
+    updateNavigation();
+}
+
+function generateSummaryRows() {
+    const memberNames = {
+        'P1': 'Elena Petrova (Material Planner)',
+        'P2': 'James Okoro (Customer Planner)',
+        'P3': 'Aiko Tanaka (Production Planner / Systems)',
+        'P4': 'Lucas Meyer (Logistics Coordinator)'
+    };
+    const taskDescriptions = {
+        'T1': 'Expedite critical supplier shipment (Malaysia)',
+        'T2': 'Re-plan customer deliveries & ETAs',
+        'T3': 'Resolve overdue ASNs; align warehouse slots',
+        'T4': 'Update ERP master data; validate MRP',
+        'T5': 'Handle VIP customs hold; exec update'
+    };
+    let rows = '';
+    Object.keys(memberNames).forEach(memberId => {
+        const memberTasks = assignments[memberId] || [];
+        const taskList = memberTasks.map(taskId => taskDescriptions[taskId]).join('<br>');
+        rows += `
+            <tr>
+                <td><strong>${memberNames[memberId]}</strong></td>
+                <td>${taskList || '<em>No tasks assigned</em>'}</td>
+                <td style="text-align: center; font-weight: bold; color: ${memberTasks.length > 2 ? '#e53e3e' : '#48bb78'}">${memberTasks.length}</td>
+            </tr>
+        `;
+    });
+    return rows;
+}
+
+function addGoal() {
+    const input = document.getElementById('takeawayInput');
+    const goal = input.value.trim();
+    if (goal) {
+        const container = document.getElementById('goalsContainer');
+        if (container.querySelector('em')) { container.innerHTML = ''; }
+        const goalDiv = document.createElement('div');
+        goalDiv.className = 'goal-item';
+        goalDiv.textContent = goal;
+        container.appendChild(goalDiv);
+        input.value = '';
+        input.placeholder = 'Add another goal or continue to complete the lesson...';
+    }
+}
+
+function completeLesson() {
+    const completionHTML = `
+        <div style="text-align: center; padding: 40px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border-radius: 15px; margin: 20px 0;">
+            <h2 style="font-size: 2.5em; margin-bottom: 20px;">🎉 Congratulations!</h2>
+            <p style="font-size: 1.3em; margin-bottom: 15px;">You've completed the Holiday Cover Plan lesson for Logistics Planning!</p>
+            <p style="font-size: 1.1em;">You practiced polite delegation, task allocation, and professional communication.</p>
+            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h3>📋 Your Session Summary:</h3>
+                <p>✅ ${savedPhrases.length} phrases saved for future use</p>
+                <p>✅ ${Object.keys(assignments).length} team members utilized</p>
+                <p>✅ 5 urgent tasks successfully delegated</p>
+                <p>✅ Reflection questions completed</p>
+                <p>✅ Personal learning goals set</p>
+            </div>
+            <p style="font-style: italic;">Keep using these delegation skills in your daily planning huddles and escalations!</p>
+        </div>
+    `;
+    document.getElementById('phase6').innerHTML = completionHTML;
+    document.querySelector('.navigation').style.display = 'none';
+}
+
+// Add some sample goals for interactivity
+setTimeout(() => {
+    if (currentPhase === 6) {
+        const sampleGoals = [
+            'clarity when delegating expedites',
+            'confidence when resetting ETAs',
+            'precision when describing MRP exceptions'
+        ];
+        const container = document.getElementById('goalsContainer');
+        if (container && container.querySelector('em')) {
+            container.innerHTML = '';
+            sampleGoals.forEach(goal => {
+                const goalDiv = document.createElement('div');
+                goalDiv.className = 'goal-item';
+                goalDiv.textContent = goal;
+                goalDiv.style.opacity = '0.7';
+                container.appendChild(goalDiv);
+            });
+        }
+    }
+}, 30000);
+
+// Visual feedback helper
+function showSuccess(message) {
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        animation: fadeInOut 2s ease-in-out;
+    `;
+    successDiv.textContent = message;
+    document.body.appendChild(successDiv);
+    setTimeout(() => { if (document.body.contains(successDiv)) { document.body.removeChild(successDiv); } }, 2000);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+`;
+document.head.appendChild(style);
+
+// Add feedback on drop
+document.addEventListener('DOMContentLoaded', function() {
+    const originalHandleDrop = handleDrop;
+    window.handleDrop = function(e) {
+        originalHandleDrop(e);
+        showSuccess('Task assigned successfully! ✅');
+    };
+});
+</script>
+</body>
+</html>
