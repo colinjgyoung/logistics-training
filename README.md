@@ -1,2 +1,2 @@
-# logistics-training
+# Logistics English training
 English training for the Homburg Logistics team
